@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('body').appendChild(clipContainer);
 
         audio.controls = true;
-        const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+        const blob = new Blob(chunks, { type: "audio/mp3; codecs=opus" });
         chunks = [];
         const audioURL = URL.createObjectURL(blob);
         audio.src = audioURL;
