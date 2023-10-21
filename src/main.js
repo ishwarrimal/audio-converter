@@ -23,7 +23,8 @@ document.querySelector('#app').innerHTML = `
       </div>
       <select></select>
       <div class="controls">
-        <button id="play" type="submit">Play</button>
+        <button id="play" class="play-btn" type="submit">Play</button>
+        <button id="play-download" class="play-btn" type="submit">Play and Download</button>
       </div>
     </form>
   </div>

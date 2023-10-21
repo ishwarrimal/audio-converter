@@ -58,7 +58,7 @@
   }
   
   /* Play Button */
-  #play {
+  .play-btn {
   background-color: #4CAF50;
   color: white;
   padding: 10px 20px;
@@ -66,6 +66,7 @@
   border: none;
   font-size: 18px;
   cursor: pointer;
+  margin-left: 10px;
   }
   
   #play:hover {
@@ -91,4 +92,11 @@
     
 .record-audio p {
   margin: 0;
+}
+
+.clip{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 15px;
 }

@@ -3,6 +3,9 @@ import { RECORDING_STATE } from './constants';
 document.addEventListener('DOMContentLoaded', () => {
     const synth = window.speechSynthesis;
     const recognition = new window.webkitSpeechRecognition()
+
+    const playButton = document.getElementById('play')
+    const playAndDownloadButton = document.getElementById('play-download')
     
     const inputForm = document.querySelector("form");
     const inputTxt = document.querySelector(".txt");
@@ -15,8 +18,41 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const recorder = document.querySelector('#record');
     let currentRecordingState = RECORDING_STATE.IDLE
+    let mediaRecorder;
+    let chunks = []
     
     let voices = [];
+
+    function handleMediaRecorderStop(e){
+      const clipName = prompt("Enter a name for your sound clip");
+
+      const clipContainer = document.createElement("article");
+      const clipLabel = document.createElement("p");
+      const audio = document.createElement("audio");
+      const deleteButton = document.createElement("button");
+
+      clipContainer.classList.add("clip");
+      audio.setAttribute("controls", "");
+      deleteButton.textContent = "Delete";
+      clipLabel.textContent = clipName;
+
+      clipContainer.appendChild(audio);
+      clipContainer.appendChild(clipLabel);
+      clipContainer.appendChild(deleteButton);
+      document.querySelector('body').appendChild(clipContainer);
+
+      audio.controls = true;
+      const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+      chunks = [];
+      const audioURL = URL.createObjectURL(blob);
+      audio.src = audioURL;
+      console.log("recorder stopped");
+
+      deleteButton.onclick = (e) => {
+        const evtTgt = e.target;
+        evtTgt.parentNode.parentNode.removeChild(evtTgt.parentNode);
+      };
+    }
     
     function populateVoiceList() {
       voices = synth.getVoices().sort(function (a, b) {
@@ -55,15 +91,32 @@ document.addEventListener('DOMContentLoaded', () => {
       recognition.lang = "en-US";
       recognition.interimResults = true;
     }
+
+    async function initializeMediaRecorder(){
+      const constraints = { audio: true };
+      return navigator.mediaDevices
+        .getUserMedia(constraints)
+        .then((stream) => {
+          return new MediaRecorder(stream);
+      })
+    }
     
     populateVoiceList();
     initializeVoiceRecognition()
+
+    initializeMediaRecorder().then(media => {
+      mediaRecorder = media
+      mediaRecorder.onstop = handleMediaRecorderStop
+      mediaRecorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+    })
     
     if (speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = populateVoiceList;
     }
     
-    function speak() {
+    function speak(download = false) {
       if (synth.speaking) {
         console.error("speechSynthesis.speaking");
         return;
@@ -73,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const utterThis = new SpeechSynthesisUtterance(inputTxt.value);
     
         utterThis.onend = function (event) {
+          download && mediaRecorder.stop()
           console.log("SpeechSynthesisUtterance.onend");
         };
     
@@ -92,16 +146,22 @@ document.addEventListener('DOMContentLoaded', () => {
         utterThis.pitch = pitch.value;
         utterThis.rate = rate.value;
         synth.speak(utterThis);
+        download && mediaRecorder.start()
       }
     }
     
-    inputForm.onsubmit = function (event) {
+    function handlePlayClick(event, download= false){
       event.preventDefault();
-    
-      speak();
-    
+      speak(download);
       inputTxt.blur();
-    };
+    }
+
+    playButton.addEventListener('click', function (event) {
+      handlePlayClick(event)
+    })
+    playAndDownloadButton.addEventListener('click', function (event) {
+      handlePlayClick(event,true)
+    })
     
     pitch.onchange = function () {
       pitchValue.textContent = pitch.value;
@@ -146,4 +206,5 @@ document.addEventListener('DOMContentLoaded', () => {
         stopRecording()
       }
     })
+
 })
